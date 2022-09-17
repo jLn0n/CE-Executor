@@ -13,7 +13,7 @@ local script_source = [==[
 
 function load_api(name)
 	http = getInternet()
-	local api_util = http.getURL("https://raw.githubusercontent.com/TheSeaweedMonster/Lucid/main/API/"..name);
+	local api_util = http.getURL("https://raw.githubusercontent.com/jLn0n/CE-Executor/main/API/" .. name);
 	http.destroy()
 	return loadstring(api_util);
 end
@@ -26,9 +26,6 @@ load_api("api_celua.lua")();
 
 -- import my memory utilities
 load_api("api_util.lua")();
-
-
-
 
 local pid = -1
 do
@@ -120,7 +117,7 @@ rbx.functions = {};
 rbx.luau = {};
 
 -- excerpt from lopcodes.h and modified for luau format
---
+
 rbx.luau.size_c = 8;
 rbx.luau.size_b = 8;
 rbx.luau.size_bx = (rbx.luau.size_c + rbx.luau.size_b);
@@ -140,27 +137,27 @@ rbx.luau.maxarg_sbx = (rbx.luau.maxarg_bx >> 1);
 rbx.luau.mask1 = function(n,p) return (~((~0) << n)) << p end
 rbx.luau.mask0 = function(n,p) return (~rbx.luau.mask1(n, p)) end
 
-rbx.luau.set_opcode = function(i,o)
+rbx.luau.set_opcode = function(i, o)
 	return (((i & rbx.luau.mask0(rbx.luau.size_op, rbx.luau.pos_op)) | ((o << rbx.luau.pos_op) & rbx.luau.mask1(rbx.luau.size_op, rbx.luau.pos_op))));
 end
 
-rbx.luau.setarg_a = function(i,o)
+rbx.luau.setarg_a = function(i, o)
 	return (((i & rbx.luau.mask0(rbx.luau.size_a, rbx.luau.pos_a)) | ((o << rbx.luau.pos_a) & rbx.luau.mask1(rbx.luau.size_a, rbx.luau.pos_a))));
 end
 
-rbx.luau.setarg_b = function(i,o)
+rbx.luau.setarg_b = function(i, o)
 	return (((i & rbx.luau.mask0(rbx.luau.size_b, rbx.luau.pos_b)) | ((o << rbx.luau.pos_b) & rbx.luau.mask1(rbx.luau.size_b, rbx.luau.pos_b))));
 end
 
-rbx.luau.setarg_bx = function(i,o)
+rbx.luau.setarg_bx = function(i, o)
 	return (((i & rbx.luau.mask0(rbx.luau.size_bx, rbx.luau.pos_bx)) | ((o << rbx.luau.pos_bx) & rbx.luau.mask1(rbx.luau.size_bx, rbx.luau.pos_bx))));
 end
 
-rbx.luau.setarg_c = function(i,o)
+rbx.luau.setarg_c = function(i, o)
 	return (((i & rbx.luau.mask0(rbx.luau.size_c, rbx.luau.pos_c)) | ((o << rbx.luau.pos_c) & rbx.luau.mask1(rbx.luau.size_c, rbx.luau.pos_c))));
 end
 
-rbx.luau.setarg_sbx = function(i,o)
+rbx.luau.setarg_sbx = function(i, o)
 	return rbx.luau.setarg_bx(i, o);
 end
 
@@ -258,15 +255,7 @@ rbx.code_iabc = function(Op, A, B, C)
 	return new_inst;
 end
 
-
 rbx.transpile = function(proto)
-	--print("proto sizecode: ", proto.sizeCode);
-	--[[if #proto.upValueNames > 0 then
-		if proto.upValueNames[1] == '_ENV' then
-			proto.upValueNames[1] = nil;
-		end
-	end
-	]]
 	local rbxProto = {};
 
 	rbxProto.sizeCode = 0;
@@ -597,9 +586,7 @@ rbx.transpile = function(proto)
 					end
 
 					for _,v in pairs(proto.locVars) do
-						--print(upvalue_name, "==", v.name);
 						if v.name == upvalue_name then
-							--print(upvalue_name, "==", v.name);
 							carry = false;
 							break;
 						end
@@ -608,7 +595,6 @@ rbx.transpile = function(proto)
 					if not carry then
 						table.insert(rbxProto.code, rbx.code_iab(rbx.luau.op_markupval, 1, upvalue_reg));
 					else
-						--print'Carrying upvalue...'
 						for i,v in pairs(proto.upValueNames) do
 							if v == upvalue_name then
 								table.insert(rbxProto.code, rbx.code_iab(rbx.luau.op_markupval, 2, i - 1));
@@ -626,13 +612,13 @@ rbx.transpile = function(proto)
 		elseif opcode_name == "CLOSE" then
 			table.insert(rbxProto.code, rbx.code_ia(rbx.luau.op_close, A));
 		else
-			error('UNREGISTERED OPCODE USED: '..opcode_name)
+			error('UNREGISTERED OPCODE USED: ' .. opcode_name)
 		end
 
 		at = at + 1;
 	end
 
-	for _,rel in pairs(relocations) do
+	for _, rel in pairs(relocations) do
 
 		if new_sizes[rel.to_index] and new_sizes[rel.from_index] then
 			local dist = new_sizes[rel.to_index] - new_sizes[rel.from_index];
@@ -644,18 +630,6 @@ rbx.transpile = function(proto)
 			error(string.format("Bad sBx relocation [ %08X, %08X, %i ]", rel.from_index, rel.to_index, #new_sizes));
 		end
 	end
-
-	--[[
-	for i = 1, #rbxProto.code do
-		local bytes = util.int_to_bytes(rbxProto.code[i]);
-		local Opcode = bytes[1];
-		local A = bytes[2];
-		local B = bytes[3];
-		local C = bytes[4];
-		print(string.format("ROBLOX Opcode: %02X %02X %02X %02X", Opcode, A, B, C));
-	end
-	]]
-
 
 	for i = 1, 3 do
 		if open_reg[i] then
@@ -727,10 +701,10 @@ rbx.dump_function = function(f)
 
 	end
 
-	writer:writeByte(2);
+	writer:writeByte(2); -- bytecode version
 	writer:writeCompressedInt(#stringTable);
 
-	for _,str in pairs(stringTable) do
+	for _, str in pairs(stringTable) do
 		--print(string.len(str), str);
 		writer:writeCompressedInt(string.len(str));
 		writer:writeString(str);
@@ -738,11 +712,11 @@ rbx.dump_function = function(f)
 
 	writer:writeCompressedInt(#protoTable);
 
-	for _,proto in pairs(protoTable) do
+	for _, proto in pairs(protoTable) do
 		local rbxProto = rbx.transpile(proto);
 
-		for i,v in pairs(proto.upValueNames) do
-			if v == "_ENV" then
+		for index, value in pairs(proto.upValueNames) do
+			if value == "_ENV" then
 				proto.nups = proto.nups - 1;
 			end
 		end
@@ -755,7 +729,6 @@ rbx.dump_function = function(f)
 		writer:writeCompressedInt(rbxProto.sizeCode);
 
 		for i = 1, rbxProto.sizeCode do
-			--print(string.format("%08X ", rbxProto.code[i]));
 			writer:writeInt(rbxProto.code[i]);
 		end
 
@@ -803,9 +776,8 @@ rbx.dump_function = function(f)
 			end
 		end
 
+		writer:writeByte(0); -- function line defined
 		writer:writeByte(0); -- function/source string id
-		writer:writeByte(0); -- function/source string id
-
 		writer:writeByte(0); -- line info
 		writer:writeByte(0); -- debug info
 	end
@@ -953,8 +925,8 @@ rbx.set_script_hook = function(enabled, our_bytecode, our_bytecode_size)
 			bytes_bytecode_size[1], bytes_bytecode_size[2], bytes_bytecode_size[3], bytes_bytecode_size[4],
 		}
 
-		for _,b in pairs(rbx.old_script_hook_bytes) do
-			table.insert(bytes1, b);
+		for _, byte in pairs(rbx.old_script_hook_bytes) do
+			table.insert(bytes1, byte);
 		end
 
 		local bytes2 = {
@@ -962,8 +934,8 @@ rbx.set_script_hook = function(enabled, our_bytecode, our_bytecode_size)
 			bytes_jmp_back[1], bytes_jmp_back[2], bytes_jmp_back[3], bytes_jmp_back[4]
 		}
 
-		for _,b in pairs(bytes2) do
-			table.insert(bytes1, b);
+		for _, byte in pairs(bytes2) do
+			table.insert(bytes1, byte);
 		end
 
 		util.write_bytes(edit_location, bytes1);
@@ -980,16 +952,6 @@ end
 rbx.execute_closure = function(closure)
 	local execute_start = os.clock();
 	local script_bytes = rbx.dump_function(closure);
-
-	-- RELAY THE BYTECODE FOR DEBUGGING
-	--[[
-	local str = "";
-	for _,b in pairs(script_bytes) do
-		str = str .. string.format("%02X ", b);
-	end
-	print(str);
-	]]
-	--error''
 
 	local our_bytecode_size = #script_bytes;
 	local our_bytecode = util.allocate_memory(our_bytecode_size + 0x10);
@@ -1015,20 +977,19 @@ loader.start = function()
 	rbx.offsets.luau_loadbuffer = util.aobscan("0F????83??7FD3??83")[10];
 	--print("luaU_loadbuffer: " .. string.format("%08X", rbx.offsets.luau_loadbuffer));
 	if rbx.offsets.luau_loadbuffer == 0 then
-		error'[Loader] Scan failed [Offset #1]'
+		error('[Loader] Scan failed [Offset #1]')
 	end
 	rbx.offsets.luau_loadbuffer = util.get_prologue(rbx.offsets.luau_loadbuffer);
 
 	rbx.offsets.sc_runscript = util.scan_xrefs("Running Script")[1];
 	--print("scriptContext_runScript: " .. string.format("%08X", rbx.offsets.sc_runscript));
 	if rbx.offsets.sc_runscript == 0 then
-		error'[Loader] Scan failed [Offset #2]'
+		error('[Loader] Scan failed [Offset #2]')
 	end
 	rbx.offsets.sc_runscript = util.get_prologue(rbx.offsets.sc_runscript);
 
 	fremote = util.new_remote();
 	print("[Remote] Created remote");
-
 
 	local replicator_hook = util.aobscan("252E3266204B422F")[1]; -- this will last a while
 	replicator_hook = util.aobscan(util.int_to_le_str(replicator_hook))[1];
@@ -1190,7 +1151,7 @@ loader.start = function()
 	end
 
 	if rbx.local_player == 0 then
-	   error'Could not find LocalPlayer'
+	   error("Could not find LocalPlayer")
 	end
 
 	print("Player name: ", rbx.functions.get_instance_name(rbx.local_player));
@@ -1210,8 +1171,6 @@ loader.start = function()
 
 	print("LocalScript: " .. string.format("%08X", rbx.local_script));
 
-
-
 	fremote.init();
 	print("[Remote] Controller: " .. string.format("%08X", fremote.remote_location));
 
@@ -1229,12 +1188,12 @@ loader.start = function()
 end
 
 rbx.start = function()
-	rbx.execute_script('spawn(function() ' .. script_source .. '\nend)');
-
+	rbx.execute_script(string.format("spawn(function() %s end)", script_source));
+	_ENV.execute_closure = execute_closure
+	
 	--retcheck.flush();
 	--fremote.flush();
 end
-
 
 -- Load everything needed for this exploit
 loader.start();
@@ -1242,7 +1201,3 @@ loader.start();
 if loader.loaded then
 	rbx.start();
 end
-
-
-
-
